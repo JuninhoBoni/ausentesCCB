@@ -26,10 +26,21 @@
                 <input type="hidden" name="date" value="{{ date }}">
                 <div class="container mt-5">
                     <h2>Busca de Nomes</h2>
-                        <label for="name" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="name" name="name" oninput="buscarNames()" required="true" autocomplete="off">
-                        <div id="resultadoBuscaName"></div>
-
+                        <!--
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="name" name="name" oninput="buscarNames()" required="true" autocomplete="off">
+                            <div id="resultadoBuscaName"></div>
+                        -->
+                        <h3>Churches</h3>
+                            <div class="form-group">
+                                <label for="church">Escolha uma igreja:</label>
+                                <select class="form-control" id="church" name="church" required>
+                                    <option value="" disabled selected>Selecione uma igreja</option>
+                                    {% for church in churches %}
+                                        <option value="{{ church['praying_house'] }}">{{ church['praying_house'] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         <h3>Justificativa</h3>
                         {% set radio_options = ["Trabalho", "Enfermidade", "Viagem", "Particular", "Outro"] %}
                         {% for option in radio_options %}
@@ -40,11 +51,21 @@
                                 </label>
                             </div>
                         {% endfor %}
-                        <div class="form-group mt-2">
+                        <div class="form-group mt-2 outra-justificativa-group">
                             <label for="outraJustificativa">Se "Outro", especifique:</label>
                             <input type="text" class="form-control" id="outraJustificativa" name="outraJustificativa">
                         </div>
 
+                        <h3>Ministério</h3>
+                        {% set cargo_options = ["Encarregado Local", "Encarregado Regional", "Examinadora"] %}
+                        {% for cargo in cargo_options %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="cargo" id="{{ cargo }}" value="{{ cargo }}" required>
+                                <label class="form-check-label" for="{{ cargo }}">
+                                    {{ cargo }}
+                                </label>
+                            </div>
+                        {% endfor %}
                         <button type="submit" class="btn btn-primary mt-3">Enviar</button>
                 </div>
 
@@ -69,6 +90,23 @@
                 return;
             }
         }
+    });
+</script>
+<script>
+    $(document).ready(function() {
+        // Esconde o campo "outraJustificativa" inicialmente
+        $(".outra-justificativa-group").hide();
+
+        // Monitora as mudanças na seleção da opção "justificativa"
+        $("input[name='justificativa']").change(function() {
+            if ($(this).val() === "Outro") {
+                // Se a opção "Outro" estiver selecionada, mostra o campo "outraJustificativa"
+                $(".outra-justificativa-group").show();
+            } else {
+                // Caso contrário, oculta o campo "outraJustificativa"
+                $(".outra-justificativa-group").hide();
+            }
+        });
     });
 </script>
 {% endblock %}
