@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Página de Login{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center vh-100">
+        <div class="col-md-4 login-box animated fadeIn">
+            <form action="/login_ausentes" method="post" class="form-signin">
+                <h1 class="h3 mb-3 font-weight-normal text-center text-light">Faça login</h1>
+                <label for="username" class="sr-only">Opção</label>
+                <select name="username" id="username" class="form-control mb-3" required>
+                    {% for option in options %}
+                        <option value="{{ option }}">{{ option }}</option>
+                    {% endfor %}
+                </select>
+                <label for="password_2" class="sr-only">Senha</label>
+                <input type="password" name="password_2" id="password_2" class="form-control mb-3" placeholder="Senha" required>
+                <button class="btn btn-lg btn-block login-btn" type="submit">Entrar</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

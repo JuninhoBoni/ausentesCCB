@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Ausentes CCB - Justificativas - {{ date }}{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row justify-content-center align-items-center vh-100">
+        <div class="col-md-4 login-box animated fadeIn">
+            <!-- Mensagem de Erro -->
+            {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <!-- Mensagem de Sucesso -->
+            {% if success %}
+                <div class="alert alert-success" role="alert">
+                    {{ success }}
+                </div>
+            {% endif %}
+            <form action="/insert_ausentes" method="post" class="form-signin">
+                <input type="hidden" name="date" value="{{ date }}">
+                <div class="container mt-5">
+                    <h2>Busca de Nomes</h2>
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" oninput="buscarNames()" required="true" autocomplete="off">
+                        <div id="resultadoBuscaName"></div>
+
+                        <h3>Justificativa</h3>
+                        {% set radio_options = ["Trabalho", "Enfermidade", "Viagem", "Particular", "Outro"] %}
+                        {% for option in radio_options %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="justificativa" id="{{ option }}" value="{{ option }}" required>
+                                <label class="form-check-label" for="{{ option }}">
+                                    {{ option }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                        <div class="form-group mt-2">
+                            <label for="outraJustificativa">Se "Outro", especifique:</label>
+                            <input type="text" class="form-control" id="outraJustificativa" name="outraJustificativa">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary mt-3">Enviar</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.querySelector(".form-signin").addEventListener("submit", function(event) {
+        // Se a opção "Outro" estiver selecionada
+        if (document.querySelector('input[name="justificativa"]:checked').value === "Outro") {
+            // Se o campo "outraJustificativa" estiver vazio
+            if (document.querySelector("#outraJustificativa").value.trim() === "") {
+                // Cancela a submissão do formulário
+                event.preventDefault();
+                // Usa Swal.fire para mostrar uma mensagem de erro
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Por favor, preencha a justificativa.'
+                });
+                return;
+            }
+        }
+    });
+</script>
+{% endblock %}
