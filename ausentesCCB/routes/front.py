@@ -109,11 +109,11 @@ async def insert(request: Request):
                         {"_id": existing_doc["_id"]},  # Use o _id para identificar o documento existente
                         {"$set": document}  # Use $set para atualizar os campos
                     )
-                    success = f"O nome {name} foi atualizado com sucesso no dia {date}!"
+                    success = f"{church} - {cargo} foi atualizado com sucesso no dia {date}!"
                 else:
                     # Se o documento não existe, insira-o
                     collection.insert_one(document)
-                    success = f"O nome {name} foi inserido com sucesso no dia {date}!"
+                    success = f"{church} - {cargo} foi inserido com sucesso no dia {date}!"
 
                 response = await justificativa_page(date, request, success)
                 if 'BEARER' in access_token.upper():
@@ -137,7 +137,7 @@ async def justificativa_page(date, request, success, error=''):
     response = templatesAusentesManager.TemplateResponse("/justificativa/justificativa.html",
                                                          {
                                                              "request": request,
-                                                             "title": f"Ausentes CCB",
+                                                             "title": f"Justificativas Ausência Reunião Mensal Encarregados",
                                                              "date": date,
                                                              "success": success,
                                                              "churches": churches,

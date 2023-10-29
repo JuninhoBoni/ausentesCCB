@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Ausentes CCB - Justificativas - {{ date }}{% endblock %}
+{% block title %}Justificativas Ausência Reunião Mensal Encarregados - {{ date }}{% endblock %}
 
 {% block content %}
 
@@ -25,13 +25,12 @@
             <form action="/insert_ausentes" method="post" class="form-signin">
                 <input type="hidden" name="date" value="{{ date }}">
                 <div class="container mt-5">
-                    <h2>Busca de Nomes</h2>
-                        <!--
+                    <!--<h2>Busca de Nomes</h2>
+
                             <label for="name" class="form-label">Name</label>
                             <input type="text" class="form-control" id="name" name="name" oninput="buscarNames()" required="true" autocomplete="off">
                             <div id="resultadoBuscaName"></div>
                         -->
-                        <h3>Churches</h3>
                             <div class="form-group">
                                 <label for="church">Escolha uma igreja:</label>
                                 <select class="form-control" id="church" name="church" required>
