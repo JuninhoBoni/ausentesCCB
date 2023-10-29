@@ -6,6 +6,19 @@
 <div class="container">
     <div class="row justify-content-center align-items-center vh-100">
         <div class="col-md-4 login-box animated fadeIn">
+            <!-- Mensagem de Erro -->
+            {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <!-- Mensagem de Sucesso -->
+            {% if success %}
+                <div class="alert alert-success" role="alert">
+                    {{ success }}
+                </div>
+            {% endif %}
             <form action="/login_ausentes" method="post" class="form-signin">
                 <h1 class="h3 mb-3 font-weight-normal text-center text-light">Faça login</h1>
                 <label for="username" class="sr-only">Opção</label>

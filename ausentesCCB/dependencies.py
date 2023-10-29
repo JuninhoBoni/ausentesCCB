@@ -37,7 +37,7 @@ db = client[DATABASE_NAME]
 collection = db[COLLECTION_NAME]
 
 # Configuração de segurança
-SECRET_KEY = "supersecretkey"
+SECRET_KEY = "6698166d-1a36-450c-9225-8fcfdec71933"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

@@ -34,6 +34,16 @@ def generate_password(length):
     return password
 
 
+def return_default(request, error):
+    options = last_five_fourth_saturdays()
+    return templatesAusentesManager.TemplateResponse("login/login.html",
+                                                     {
+                                                         "request": request,
+                                                         "options": options,
+                                                         "error": error
+                                                     })
+
+
 @router.post("/insert_ausentes", response_class=HTMLResponse, include_in_schema=False)
 async def insert(request: Request):
     access_token = request.cookies.get("Authorization").replace("Bearer ", "")
@@ -45,7 +55,9 @@ async def insert(request: Request):
     except JWTError:
         print("Token inválido!")
 
-    if payload.get("sub") == payload.get("client_id"):
+    sub = payload.get("sub")
+    client_id = payload.get("client_id")
+    if sub == client_id:
         form = await request.form()
         name = form.get('name', None)
         justificativa = form.get('justificativa', None)
@@ -56,27 +68,51 @@ async def insert(request: Request):
 
         # Defina o fuso horário para São Paulo
         brazil_tz = ZoneInfo('America/Sao_Paulo')
+        date_hour_test = datetime(year, month, day, 15, 0, 0, tzinfo=brazil_tz)
 
-        date_test = datetime(year, month, day, 0, 0, 0, tzinfo=brazil_tz)
+        # Obtenha a data e hora atual
+        current_datetime = datetime.now(brazil_tz)
 
-        db['absent'].insert_one({
-            "name": name,
-            "justificativa": justificativa,
-            "outraJustificativa": outraJustificativa,
-            "date": date_test,
-            "nameFind": unidecode(name).lower(),
-            "dateFind": date_test.strftime('%d-%m-%Y'),
-        })
-        response = templatesAusentesManager.TemplateResponse("/justificativa/justificativa.html",
-                                                               {
-                                                                   "request": request,
-                                                                   "title": f"Ausentes CCB",
-                                                                   "date": date,
-                                                                   "success": f"{name} Inserido com sucesso!"
-                                                               })
-        if 'BEARER' in access_token.upper():
-            access_token = access_token.split(' ')[-1]
-        response.set_cookie(key="Authorization", value=f"Bearer {access_token}", httponly=True, max_age=1800)
+        if ("-admin" in sub and "-admin" in client_id) or (current_datetime <= date_hour_test):
+            date_test = datetime(year, month, day, 0, 0, 0, tzinfo=brazil_tz)
+
+            document = {
+                "name": name,
+                "justificativa": justificativa,
+                "outraJustificativa": outraJustificativa,
+                "date": date_test,
+                "nameFind": unidecode(name).lower(),
+                "dateFind": date_test.strftime('%d-%m-%Y'),
+            }
+
+            # Verifique se já existe um documento com os campos 'nameFind' e 'dateFind'
+            existing_doc = await collection.find_one({"nameFind": document["nameFind"], "dateFind": document["dateFind"]})
+
+            if existing_doc:
+                # Se o documento já existe, atualize-o
+                collection.update_one(
+                    {"_id": existing_doc["_id"]},  # Use o _id para identificar o documento existente
+                    {"$set": document}  # Use $set para atualizar os campos
+                )
+                success = f"O nome {name} foi atualizado com sucesso no dia {date}!"
+            else:
+                # Se o documento não existe, insira-o
+                collection.insert_one(document)
+                success = f"O nome {name} foi inserido com sucesso no dia {date}!"
+
+            response = templatesAusentesManager.TemplateResponse("/justificativa/justificativa.html",
+                                                                 {
+                                                                     "request": request,
+                                                                     "title": f"Ausentes CCB",
+                                                                     "date": date,
+                                                                     "success": success
+                                                                 })
+            if 'BEARER' in access_token.upper():
+                access_token = access_token.split(' ')[-1]
+            response.set_cookie(key="Authorization", value=f"Bearer {access_token}", httponly=True, max_age=1800)
+        else:
+            error = "Só é possível justificar até as 15:00h do sábado!"
+            response = return_default(request, error)
         return response
     raise HTTPException(status_code=400, detail="ACESSO INVÁLIDO.")
 
@@ -88,21 +124,44 @@ async def login_for_access_token(request: Request):
     password = form.get('password_2', None)
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
-    if password.lower() == 'ccb':
-        generate_uuid = generate_password(8)
-        access_token = await create_access_token(data={"sub": generate_uuid}, expires_delta=access_token_expires)
-    else:
-        raise HTTPException(status_code=400, detail="ACESSO INVÁLIDO.")
+    brazil_tz = ZoneInfo('America/Sao_Paulo')
+    day, month, year = map(int, username.split('-'))
+    date_hour_test = datetime(year, month, day, 15, 0, 0, tzinfo=brazil_tz)
 
-    response = templatesAusentesManager.TemplateResponse("/justificativa/justificativa.html",
-                                                           {
-                                                               "request": request,
-                                                               "title": f"Ausentes CCB",
-                                                               "date": username
-                                                           })
-    if 'BEARER' in access_token.upper():
-        access_token = access_token.split(' ')[-1]
-    response.set_cookie(key="Authorization", value=f"Bearer {access_token}", httponly=True, max_age=1800)
+    current_datetime = datetime.now(brazil_tz)
+
+    if password.lower() == 'ccb':
+        lower_limit = date_hour_test - timedelta(days=7)
+        if lower_limit <= current_datetime <= date_hour_test:
+            generate_uuid = generate_password(8)
+            access_token = await create_access_token(data={"sub": generate_uuid}, expires_delta=access_token_expires)
+            response = templatesAusentesManager.TemplateResponse("/justificativa/justificativa.html",
+                                                                 {
+                                                                     "request": request,
+                                                                     "title": f"Ausentes CCB",
+                                                                     "date": username
+                                                                 })
+            if 'BEARER' in access_token.upper():
+                access_token = access_token.split(' ')[-1]
+            response.set_cookie(key="Authorization", value=f"Bearer {access_token}", httponly=True, max_age=1800)
+        else:
+            error = f"""O intervalo para justificativa de ausência da reunão do mês {month} de {year} é a partir do dia {lower_limit.strftime('%d-%m-%Y')} até dia {date_hour_test.strftime('%d-%m-%Y')} às {date_hour_test.strftime('%H:%M')}h!"""
+            response = return_default(request, error)
+    elif password.lower() == 'admin':
+        generate_uuid = f'{generate_password(8)}-admin'
+        access_token = await create_access_token(data={"sub": generate_uuid}, expires_delta=access_token_expires)
+        response = templatesAusentesManager.TemplateResponse("/justificativa/justificativa.html",
+                                                             {
+                                                                 "request": request,
+                                                                 "title": f"Ausentes CCB - Acesso ADMIN",
+                                                                 "date": username
+                                                             })
+        if 'BEARER' in access_token.upper():
+            access_token = access_token.split(' ')[-1]
+        response.set_cookie(key="Authorization", value=f"Bearer {access_token}", httponly=True, max_age=1800)
+    else:
+        error = f"Informações de acesso inválidas!"
+        response = return_default(request, error)
     return response
 
 
@@ -116,7 +175,6 @@ def last_five_fourth_saturdays():
             date = datetime(month.year, month.month, day)
             if date.weekday() == 5:
                 date = date + timedelta(days=21)
-                logging.info(date.strftime('%d-%m-%Y'))
                 months.append(date.strftime('%d-%m-%Y'))
                 break
     return months
@@ -126,12 +184,11 @@ def last_five_fourth_saturdays():
 async def login_init(request: Request):
     access_token = None
     options = last_five_fourth_saturdays()
-    logging.info(options)
     response = templatesAusentesManager.TemplateResponse("login/login.html",
-                                                           {
-                                                               "request": request,
-                                                               "options": options,
-                                                           })
+                                                         {
+                                                             "request": request,
+                                                             "options": options,
+                                                         })
     response.set_cookie(key="Authorization", value=f"Bearer {access_token}", httponly=True, max_age=0)
     return response
 
