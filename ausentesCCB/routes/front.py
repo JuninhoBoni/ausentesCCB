@@ -101,18 +101,18 @@ async def insert(request: Request):
                 }
 
                 # Verifique se já existe um documento com os campos 'nameFind' e 'dateFind'
-                existing_doc = await collection.find_one({"nameFind": document["nameFind"], "dateFind": document["dateFind"]})
+                existing_doc = await db.absent.find_one({"nameFind": document["nameFind"], "dateFind": document["dateFind"]})
 
                 if existing_doc:
                     # Se o documento já existe, atualize-o
-                    collection.update_one(
+                    await db.absent.update_one(
                         {"_id": existing_doc["_id"]},  # Use o _id para identificar o documento existente
                         {"$set": document}  # Use $set para atualizar os campos
                     )
                     success = f"{church} - {cargo} foi atualizado com sucesso no dia {date}!"
                 else:
                     # Se o documento não existe, insira-o
-                    collection.insert_one(document)
+                    await db.absent.insert_one(document)
                     success = f"{church} - {cargo} foi inserido com sucesso no dia {date}!"
 
                 response = await justificativa_page(date, request, success)
