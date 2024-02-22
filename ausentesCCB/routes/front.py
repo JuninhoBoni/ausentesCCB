@@ -85,6 +85,8 @@ async def insert(request: Request):
                 name = church_db['maestro_master']
             elif cargo == 'Examinadora':
                 name = church_db.get('examinadora', None)
+            elif cargo == 'Secretário da Música':
+                name = church_db.get('secretario', None)
             else:
                 name = None
 
@@ -96,6 +98,7 @@ async def insert(request: Request):
                     "justificativa": justificativa,
                     "outraJustificativa": outraJustificativa,
                     "date": date_test,
+                    "cargo": cargo,
                     "nameFind": unidecode(name).lower(),
                     "dateFind": date_test.strftime('%d-%m-%Y'),
                 }

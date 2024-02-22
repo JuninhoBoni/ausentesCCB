@@ -55,8 +55,8 @@
                             <input type="text" class="form-control" id="outraJustificativa" name="outraJustificativa">
                         </div>
 
-                        <h3>Ministério</h3>
-                        {% set cargo_options = ["Encarregado Local", "Encarregado Regional", "Examinadora"] %}
+                        <h3>Cargo/Ministério</h3>
+                        {% set cargo_options = ["Encarregado Local", "Encarregado Regional", "Examinadora", "Secretário da Música"] %}
                         {% for cargo in cargo_options %}
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="cargo" id="{{ cargo }}" value="{{ cargo }}" required>
